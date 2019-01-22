@@ -1,0 +1,55 @@
+{
+  "project_info": {
+    "project_number": "863609544159",
+    "firebase_url": "https://redtech-debt.firebaseio.com",
+    "project_id": "redtech-debt",
+    "storage_bucket": "redtech-debt.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:863609544159:android:8977f8b17deb0f99",
+        "android_client_info": {
+          "package_name": "com.redtech.debt"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "863609544159-ghp4e9cudocuo005aolds0984ujc0vfr.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.redtech.debt",
+            "certificate_hash": "c6a5251542a36950f4524c2bf44e56825f70827c"
+          }
+        },
+        {
+          "client_id": "863609544159-ag2siq51fm4r3t94if0unlglp90evu0p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD1tK122i0IhSGI41jVM55Tm8jbi16nO8I"
+        }
+      ],
+      "services": {
+        "analytics_service": {
+          "status": 1
+        },
+        "appinvite_service": {
+          "status": 2,
+          "other_platform_oauth_client": [
+            {
+              "client_id": "863609544159-ag2siq51fm4r3t94if0unlglp90evu0p.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        },
+        "ads_service": {
+          "status": 2
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
