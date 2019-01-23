@@ -86,6 +86,9 @@ class MainMenuPage extends StatelessWidget {
     print(policyList);
     Map<String,dynamic> refData = refDoc.data;
     refData['policies'] = policyList;
+    Firestore.instance.collection('users').document(userDetails.uid).updateData({
+      'saveGame': refData,
+    });
     Navigator.push(context, new MaterialPageRoute(builder: (context) => new MainGameView(userDetails: userDetails,saveGame: refData)));
   }
 
