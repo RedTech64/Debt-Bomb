@@ -3,6 +3,7 @@ import 'policy _dialog.dart';
 import 'dart:async';
 import 'main_game_view.dart';
 import 'sign_in.dart';
+import 'package:intl/intl.dart';
 
 class RevenuePage extends StatefulWidget {
   final UserDetails userDetails;
@@ -61,6 +62,9 @@ class _RevenuePageState extends State<RevenuePage> {
                 if (result != null) {
                   saveGame['policies'][id] = result.policyData;
                   uploadSaveGame(userDetails, saveGame);
+                  if(result.delete) {
+                    saveGame['policies'][id]['enabled'] = false;
+                  }
                 }
               },
             ),
@@ -74,7 +78,7 @@ class _RevenuePageState extends State<RevenuePage> {
   Future _openPolicyEditDialog(context,id,policyData) async {
     return await Navigator.of(context).push(new MaterialPageRoute<PolicyEditDialogResult>(
         builder: (BuildContext context) {
-          return new PolicyEditDialog(id: id,policyData: policyData);
+          return new PolicyEditDialog(id: id,policyData: policyData, edit: true);
         }));
   }
 }

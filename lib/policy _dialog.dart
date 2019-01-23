@@ -3,6 +3,7 @@ import 'dart:async';
 import 'main_game_view.dart';
 import 'sign_in.dart';
 import 'dart:convert';
+import 'package:intl/intl.dart';
 
 class PolicyDialog extends StatelessWidget {
   final Map<String,dynamic> saveGame;
@@ -31,33 +32,34 @@ class PolicyDialog extends StatelessWidget {
     List<Widget> cardList = <Widget>[];
     Map<String,dynamic> policies = saveGame['policies'];
     policies.forEach((id,data) {
-      cardList.add(
-        new Card(
-          child: new InkWell(
-            child: new Row(
-              children: <Widget>[
-                new Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: new Text(
-                    data['name'],
-                    style: new TextStyle(
-                      fontSize: 24.0,
-                      //fontWeight: FontWeight.bold
+      if(!data['enabled'])
+        cardList.add(
+          new Card(
+            child: new InkWell(
+              child: new Row(
+                children: <Widget>[
+                  new Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: new Text(
+                      data['name'],
+                      style: new TextStyle(
+                        fontSize: 24.0,
+                        //fontWeight: FontWeight.bold
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
+              onTap: () async {
+                PolicyEditDialogResult result = await _openPolicyAddDialog(context,id,policies[id]);
+                if(result != null) {
+                  result.policyData['enabled'] = true;
+                  Navigator.pop(context, result);
+                }
+              },
             ),
-            onTap: () async {
-              PolicyEditDialogResult result = await _openPolicyAddDialog(context,id,policies[id]);
-              if(result != null) {
-                result.policyData['enabled'] = true;
-                Navigator.pop(context, result);
-              }
-            },
           ),
-        ),
-      );
+        );
     });
     return cardList;
   }
@@ -65,7 +67,7 @@ class PolicyDialog extends StatelessWidget {
   Future _openPolicyAddDialog(context,id,policyData) async {
     return await Navigator.of(context).push(new MaterialPageRoute<PolicyEditDialogResult>(
       builder: (BuildContext context) {
-        return new PolicyEditDialog(id: id,policyData: policyData);
+        return new PolicyEditDialog(id: id,policyData: policyData,edit: false);
       }));
   }
 }
@@ -73,24 +75,28 @@ class PolicyDialog extends StatelessWidget {
 class PolicyEditDialog extends StatefulWidget {
   final String id;
   final Map<String,dynamic> policyData;
+  final bool edit;
 
   PolicyEditDialog({
     @required this.id,
-    @required this.policyData
+    @required this.policyData,
+    @required this.edit
   });
 
   @override
-  _PolicyEditDialogState createState() => _PolicyEditDialogState(id: id, policyData: policyData);
+  _PolicyEditDialogState createState() => _PolicyEditDialogState(id: id, policyData: policyData, edit: edit);
 }
 
 class _PolicyEditDialogState extends State<PolicyEditDialog> {
   String id;
+  bool edit;
   Map<String,dynamic> policyData;
   Map<String,dynamic> newPolicyData;
 
   _PolicyEditDialogState({
     @required this.id,
-    @required this.policyData
+    @required this.policyData,
+    @required this.edit,
   });
 
   @override
@@ -105,16 +111,18 @@ class _PolicyEditDialogState extends State<PolicyEditDialog> {
   Widget build(BuildContext context) {
     return new Scaffold(
       appBar: new AppBar(
-        title: new Text("Edit Policy"),
+        title: edit ? new Text("Edit Policy") : new Text("Add Policy"),
         actions: <Widget>[
-          new IconButton(
-            icon: new Icon(Icons.delete),
+          edit  ?
+          new FlatButton(
+            child: new Text("REPEAL", style: new TextStyle(color: Colors.white)),
             onPressed: () {
+              policyData['enabled'] = false;
               Navigator.pop(context,new PolicyEditDialogResult(id,newPolicyData, true));
             }
-          ),
-          new IconButton(
-            icon: new Icon(Icons.add),
+          ) : new Container(),
+          new FlatButton(
+            child: edit ? new Text("SAVE", style: new TextStyle(color: Colors.white)) : new Text("ADD", style: new TextStyle(color: Colors.white)),
             onPressed: () {
               Navigator.pop(context,new PolicyEditDialogResult(id,newPolicyData, false));
             }
@@ -163,6 +171,7 @@ class _PolicyEditDialogState extends State<PolicyEditDialog> {
   }
 
   List<Widget> _buildSliderOptions() {
+    NumberFormat numFormatCompact = new NumberFormat.compact();
     List<Widget> list = <Widget>[];
     Map<dynamic,dynamic> sliderSettings = newPolicyData['sliderSettings'];
     sliderSettings.forEach((id,setting) {
@@ -170,34 +179,71 @@ class _PolicyEditDialogState extends State<PolicyEditDialog> {
         new Card(
           child: new Column(
             children: <Widget>[
-              new Text(
-                setting['name'],
-                style: new TextStyle(
-                  fontSize: 16.0,
+              new Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: new Text(
+                  setting['name'],
+                  style: new TextStyle(
+                    fontSize: 16.0,
+                  ),
                 ),
               ),
               new Divider(height: 0.0),
-              new Text(
-                setting['description'],
-                style: new TextStyle(
-                  fontSize: 16.0,
+/*              new Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: new Text(
+                  setting['description'],
+                  style: new TextStyle(
+                    fontSize: 16.0,
+                  ),
                 ),
-              ),
-              new Slider(
-                value: setting['setting'].toDouble(),
-                min: setting['min'].toDouble(),
-                max: setting['max'].toDouble(),
-                onChanged: (value) {
-                  setState(() {
-                    newPolicyData['sliderSettings'][id]['setting'] = value.round();
-                  });
-                }
+              ),*/
+              new Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: <Widget>[
+                  new Padding(
+                    padding: const EdgeInsets.fromLTRB(8.0,8.0,0.0,8.0),
+                    child: new Text(
+                      setting['setting'].toString()+setting['symbol'],
+                    ),
+                  ),
+                  new Expanded(
+                    child: new Padding(
+                      padding: const EdgeInsets.fromLTRB(0.0,8.0,0.0,8.0),
+                      child: new Slider(
+                        value: setting['setting'].toDouble(),
+                        min: setting['min'].toDouble(),
+                        max: setting['max'].toDouble(),
+                        onChanged: (value) {
+                          setState(() {
+                            newPolicyData['sliderSettings'][id]['setting'] = value.round();
+                          });
+                        }
+                      ),
+                    ),
+                  ),
+                  new Padding(
+                    padding: const EdgeInsets.fromLTRB(0.0,8.0,8.0,8.0),
+                    child: new Text(
+                      numFormatCompact.format(_getYearlyAffect(id)),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),
       ));
     });
     return list;
+  }
+
+  double _getYearlyAffect(id) {
+    List<dynamic> affect = newPolicyData['sliderSettings'][id]['multipliers'];
+    double sum = 0.0;
+    affect.forEach((num) {
+      sum += (num*(newPolicyData['sliderSettings'][id]['setting']/100));
+    });
+    return sum;
   }
 }
 
