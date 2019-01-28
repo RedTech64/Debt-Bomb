@@ -1,26 +1,33 @@
 import 'package:debt_bomb/data_card.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'main_game_view.dart';
+import 'sign_in.dart';
 
 class HomePage extends StatefulWidget {
+  final UserDetails userDetails;
   final Map<String,dynamic> saveGame;
 
-  HomePage(this.saveGame);
+  HomePage({
+    @required this.userDetails,
+    @required this.saveGame
+  });
 
   @override
-  _HomePageState createState() => new _HomePageState(saveGame);
+  _HomePageState createState() => new _HomePageState(userDetails: userDetails,saveGame: saveGame);
 }
 
 class _HomePageState extends State<HomePage> {
+  final UserDetails userDetails;
   Map<String,dynamic> saveGame;
-  int _debt = 21000000000000;
-  int _revenue = 3100000000000;
-  int _expenditures = 3954000000000;
   Map<String,double> rates;
   int _debtSliderValue = 2;
   bool _debtBuy = false;
 
-  _HomePageState(this.saveGame);
+  _HomePageState({
+    @required this.userDetails,
+    @required this.saveGame
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -44,11 +51,17 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                 ),
+                new DataCard(
+                  number: saveGame['balance'].toDouble(),
+                  style: new TextStyle(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
               ],
             ),
             new DataCard(
               label: "National Debt",
-              number: saveGame['debt'],
+              number: saveGame['debt'].toDouble(),
               style: new TextStyle(
                 color: Colors.red,
                 fontSize: 28.0,
@@ -60,7 +73,7 @@ class _HomePageState extends State<HomePage> {
                 new Expanded(
                   child: new DataCard(
                     label: "Revenue",
-                    number: _revenue,
+                    number: getRevenue(saveGame,saveGame['month']+1).toDouble(),
                     style: new TextStyle(
                       color: Colors.green,
                       fontSize: 16.0,
@@ -71,9 +84,9 @@ class _HomePageState extends State<HomePage> {
                 ),
                 new Expanded(
                   child: new DataCard(
-                    number: _revenue-_expenditures,
+                    number: getRevenue(saveGame,saveGame['month']+1).toDouble()-getExpenditures(saveGame,saveGame['month']+1).toDouble(),
                     style: new TextStyle(
-                      color: Colors.red,
+                      color: (getRevenue(saveGame,saveGame['month']+1)-getExpenditures(saveGame,saveGame['month']+1) < 0) ? Colors.red : Colors.green,
                       fontSize: 24.0,
                       fontWeight: FontWeight.bold,
                     ),
@@ -83,7 +96,7 @@ class _HomePageState extends State<HomePage> {
                 new Expanded(
                   child: new DataCard(
                     label: "Expenditures",
-                    number: _expenditures,
+                    number: getExpenditures(saveGame,saveGame['month']+1).toDouble(),
                     style: new TextStyle(
                       color: Colors.red,
                       fontSize: 16.0,
@@ -111,23 +124,28 @@ class _HomePageState extends State<HomePage> {
                   new Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                     children: <Widget>[
-                      new Text(
-                        _debtSliderValue.toString()+"B",
-                        style: new TextStyle(
-                          fontSize: 16.0,
-                          fontWeight: FontWeight.bold,
+                      new Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: new Text(
+                          _debtSliderValue.toString()+"B",
+                          style: new TextStyle(
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
                       ),
-                      new Slider(
-                          value: _debtSliderValue.toDouble(),
-                          divisions: 12,
-                          min: 2.0,
-                          max: 50.0,
-                          onChanged: (value) {
-                            setState(() {
-                              _debtSliderValue = value.round();
-                            });
-                          }
+                      new Expanded(
+                        child: new Slider(
+                            value: _debtSliderValue.toDouble(),
+                            divisions: 12,
+                            min: 2.0,
+                            max: 50.0,
+                            onChanged: (value) {
+                              setState(() {
+                                _debtSliderValue = value.round();
+                              });
+                            }
+                        ),
                       ),
                     ],
                   ),
@@ -169,11 +187,14 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   new Divider(height: 0.0),
-                  new TreasuryNote(name: "1 Month Note", id: "1m", rate: 1.40, buy: _debtBuy),
+                  new Column(
+                    children: _buildDebtCards(),
+                  ),
+/*                  new TreasuryNote(name: "1 Month Note", id: "1m", rate: 1.40, buy: _debtBuy),
                   new TreasuryNote(name: "6 Month Note", id: "6m", rate: 1.66, buy: _debtBuy),
                   new TreasuryNote(name: "1 Year Note", id: "1y", rate: 2.07, buy: _debtBuy),
                   new TreasuryNote(name: "2 Year Note", id: "2y", rate: 2.68, buy: _debtBuy),
-                  new TreasuryNote(name: "5 Month Note", id: "5y", rate: 2.98, buy: _debtBuy),
+                  new TreasuryNote(name: "5 Month Note", id: "5y", rate: 2.98, buy: _debtBuy),*/
                 ],
               ),
             ),
@@ -182,6 +203,46 @@ class _HomePageState extends State<HomePage> {
       ),
     );
   }
+
+  List<Widget> _buildDebtCards() {
+    List<Widget> list = <Widget>[];
+    Map<String,dynamic> treasuries = saveGame['treasuries'];
+    treasuries.forEach((id,data) {
+      list.add(
+        new TreasuryNote(
+          name: data['name'],
+          id: id,
+          rate: data['rate'],
+          buy: _debtBuy,
+          onTap: () {
+            _borrow(id,data['months'],data['rate']);
+          },
+        ));
+    });
+    return list;
+  }
+
+  void _borrow(String id,months,rate) {
+    Map debt = saveGame['debtData'];
+    String monthDue = (saveGame['month']+months).toString();
+    int amount = _debtSliderValue*1000000000;
+    if(debt[monthDue] == null) {
+      debt[monthDue] = [];
+    }
+    List list = debt[monthDue];
+    list.add({
+      'id': id,
+      'amount': amount,
+      'rate': rate,
+    });
+    saveGame['treasuries'][id]['sold'] += _debtSliderValue;
+    saveGame['treasuries'][id]['rate'] = calculateRate(saveGame,id);
+    saveGame['balance'] += amount;
+    saveGame['debt'] += amount+(amount*rate);
+    saveGame['interestDue'] += (amount*rate)/months;
+    setState(() {});
+    uploadSaveGame(userDetails,saveGame);
+  }
 }
 
 class TreasuryNote extends StatelessWidget {
@@ -189,12 +250,14 @@ class TreasuryNote extends StatelessWidget {
   final String id;
   final double rate;
   final bool buy;
+  final VoidCallback onTap;
 
   TreasuryNote({
     @required this.name,
     @required this.id,
     @required this.rate,
-    @required this.buy
+    @required this.buy,
+    @required this.onTap
   });
 
   @override
@@ -216,7 +279,7 @@ class TreasuryNote extends StatelessWidget {
         new SizedBox(
           width: 50.0,
           child: new Text(
-            numFormat.format(rate)+"%",
+            numFormat.format(rate*100)+"%",
             style: new TextStyle(
               fontSize: 16.0,
               //fontWeight: FontWeight.bold,
@@ -226,11 +289,11 @@ class TreasuryNote extends StatelessWidget {
         buy ?
         new RaisedButton(
             child: new Text("BUY"),
-            onPressed: () {}
+            onPressed: onTap
         ) :
         new RaisedButton(
             child: new Text("SELL"),
-            onPressed: () {}
+            onPressed: onTap
         )
       ],
     );

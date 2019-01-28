@@ -5,25 +5,29 @@ import 'main_game_view.dart';
 import 'sign_in.dart';
 import 'package:intl/intl.dart';
 
-class RevenuePage extends StatefulWidget {
+class PolicyPage extends StatefulWidget {
   final UserDetails userDetails;
   final Map<String,dynamic> saveGame;
+  final String type;
 
-  RevenuePage({
+  PolicyPage({
     @required this.userDetails,
-    @required this.saveGame
+    @required this.saveGame,
+    @required this.type
   });
 
-  _RevenuePageState createState() => new _RevenuePageState(userDetails: userDetails, saveGame: saveGame);
+  _PolicyPageState createState() => new _PolicyPageState(userDetails: userDetails, saveGame: saveGame, type: type);
 }
 
-class _RevenuePageState extends State<RevenuePage> {
+class _PolicyPageState extends State<PolicyPage> {
   UserDetails userDetails;
   Map<String,dynamic> saveGame;
+  String type;
 
-  _RevenuePageState({
+  _PolicyPageState({
     @required this.userDetails,
-    @required this.saveGame
+    @required this.saveGame,
+    @required this.type
   });
 
   @override
@@ -39,7 +43,7 @@ class _RevenuePageState extends State<RevenuePage> {
     List<Widget> list = <Widget>[];
     Map<String,dynamic> policies = saveGame['policies'];
     policies.forEach((id,data) {
-      if(data['enabled']) {
+      if(data['enabled'] && data['type'] == type) {
         list.add(
           new Card(
             child: new InkWell(
@@ -61,6 +65,7 @@ class _RevenuePageState extends State<RevenuePage> {
                 PolicyEditDialogResult result = await _openPolicyEditDialog(context, id, data);
                 if (result != null) {
                   saveGame['policies'][id] = result.policyData;
+                  calculatePolicy(id, saveGame);
                   uploadSaveGame(userDetails, saveGame);
                   if(result.delete) {
                     saveGame['policies'][id]['enabled'] = false;

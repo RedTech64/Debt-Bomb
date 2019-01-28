@@ -7,9 +7,11 @@ import 'package:intl/intl.dart';
 
 class PolicyDialog extends StatelessWidget {
   final Map<String,dynamic> saveGame;
+  final String type;
 
   PolicyDialog({
     @required this.saveGame,
+    @required this.type
   });
 
   @override
@@ -32,7 +34,8 @@ class PolicyDialog extends StatelessWidget {
     List<Widget> cardList = <Widget>[];
     Map<String,dynamic> policies = saveGame['policies'];
     policies.forEach((id,data) {
-      if(!data['enabled'])
+      print(type);
+      if(!data['enabled'] && data['type'] == type)
         cardList.add(
           new Card(
             child: new InkWell(
@@ -204,7 +207,7 @@ class _PolicyEditDialogState extends State<PolicyEditDialog> {
                   new Padding(
                     padding: const EdgeInsets.fromLTRB(8.0,8.0,0.0,8.0),
                     child: new Text(
-                      setting['setting'].toString()+setting['symbol'],
+                      setting['percent'] ? setting['setting'].toString()+"%" : "",
                     ),
                   ),
                   new Expanded(
@@ -222,10 +225,13 @@ class _PolicyEditDialogState extends State<PolicyEditDialog> {
                       ),
                     ),
                   ),
-                  new Padding(
-                    padding: const EdgeInsets.fromLTRB(0.0,8.0,8.0,8.0),
-                    child: new Text(
-                      numFormatCompact.format(_getYearlyAffect(id)),
+                  new SizedBox(
+                    width: 50.0,
+                    child: new Padding(
+                      padding: const EdgeInsets.fromLTRB(0.0,8.0,8.0,8.0),
+                      child: new Text(
+                        numFormatCompact.format(_getYearlyAffect(id)),
+                      ),
                     ),
                   ),
                 ],
@@ -241,7 +247,11 @@ class _PolicyEditDialogState extends State<PolicyEditDialog> {
     List<dynamic> affect = newPolicyData['sliderSettings'][id]['multipliers'];
     double sum = 0.0;
     affect.forEach((num) {
-      sum += (num*(newPolicyData['sliderSettings'][id]['setting']/100));
+      if(newPolicyData['sliderSettings'][id]['percent']) {
+        sum += (num*(newPolicyData['sliderSettings'][id]['setting']/100));
+      } else {
+        sum += (num * (newPolicyData['sliderSettings'][id]['setting']));
+      }
     });
     return sum;
   }

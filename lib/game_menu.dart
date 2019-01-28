@@ -83,9 +83,16 @@ class MainMenuPage extends StatelessWidget {
     policyDocs.forEach((DocumentSnapshot d) {
       policyList[d.documentID] = (d.data);
     });
-    print(policyList);
+    collRef = refDataRef.collection('debt');
+    collDocs = await collRef.getDocuments();
+    List<DocumentSnapshot> debtDocs = collDocs.documents;
+    Map<String,Map<String,dynamic>> debtList = new Map();
+    debtDocs.forEach((DocumentSnapshot d) {
+      debtList[d.documentID] = (d.data);
+    });
     Map<String,dynamic> refData = refDoc.data;
     refData['policies'] = policyList;
+    refData['treasuries'] = debtList;
     Firestore.instance.collection('users').document(userDetails.uid).updateData({
       'saveGame': refData,
     });

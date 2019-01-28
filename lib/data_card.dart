@@ -3,7 +3,7 @@ import 'package:intl/intl.dart';
 
 class DataCard extends StatelessWidget {
   String label;
-  final int number;
+  final double number;
   TextStyle style;
   Color color;
   bool compact;
