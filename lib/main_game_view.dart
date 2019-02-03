@@ -6,6 +6,7 @@ import 'policy _dialog.dart';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:math';
+import 'stats.dart';
 
 class MainGameView extends StatefulWidget {
   final UserDetails userDetails;
@@ -44,6 +45,18 @@ class _MainGameViewState extends State<MainGameView> {
     return new Scaffold(
       appBar: new AppBar(
         title: new Text("Debt Bomb"),
+        actions: <Widget>[
+          new IconButton(
+            icon: new Icon(Icons.insert_chart),
+            onPressed: () {
+              Navigator.push(context, new MaterialPageRoute(builder: (context) => new StatisticsPage(saveGame: saveGame)));
+            }),
+          new IconButton(
+              icon: new Icon(Icons.save),
+              onPressed: () {
+                uploadSaveGame(userDetails, saveGame);
+              }),
+        ],
       ),
       body: _page,
       bottomNavigationBar: new BottomNavigationBar(
@@ -106,20 +119,31 @@ class _MainGameViewState extends State<MainGameView> {
   void _nextTurn() {
     saveGame['balance'] += getRevenue(saveGame, saveGame['month']+1);
     saveGame['balance'] -= getExpenditures(saveGame, saveGame['month']+1);
+    saveGame['debt'] -= saveGame['interestDue'];
     if(saveGame['debtData'][(saveGame['month']+1).toString()] != null) {
-      List treasuries = saveGame['debtData'][(saveGame['month']+1).toString()];
-      treasuries.forEach((map) {
-        saveGame['interestDue'] -= (map['amount']*map['rate'])/saveGame['treasuries'][map['id']]['months'];
-        saveGame['debt'] -= (map['amount']*map['rate'])+map['amount'];
+      List debtData = saveGame['debtData'][(saveGame['month']+1).toString()];
+      debtData.forEach((map) {
+        saveGame['interestDue'] -= (map['amount']*map['rate']).round()/saveGame['treasuries'][map['id']]['months'];
+        saveGame['debt'] -= map['amount'];
         saveGame['treasuries'][map['id']]['sold'] -= map['amount']/1000000000;
-        saveGame['treasuries'][map['id']]['rate'] = calculateRate(saveGame, map['id']);
+        //saveGame['treasuries'][map['id']]['rate'] = calculateRate(saveGame, map['id']);
       });
       saveGame['debtData'][(saveGame['month']+1).toString()] = null;
     }
+    saveGame['month'] += 1;
+    Map treasuries = saveGame['treasuries'];
+    treasuries.forEach((id,data) {
+      if(data['sold'] < data['appetite'] && data['rate'] > 0)
+        saveGame['treasuries'][id]['rate'] -= ((data['appetite']/(data['sold']+data['monthlyAppetite']))*pow((data['rate']),2))/100;
+      if(data['rate'] < 0)
+        saveGame['treasuries'][id]['rate'] = 0.0;
+      saveGame['treasuries'][id]['appetite'] += data['monthlyAppetite'];
+      if(data['autoSell'] > 0)
+        borrow(id,data['autoSell'],userDetails,saveGame);
+    });
     if((saveGame['interestDue'] > 0 && saveGame['interestDue'] < 100) || (saveGame['interestDue'] < 0 && saveGame['interestDue'] > -100)) {
       saveGame['interestDue'] = 0;
     }
-    saveGame['month'] += 1;
     setState(() {
       _page = new HomePage(userDetails: userDetails, saveGame: saveGame);
     });
@@ -144,6 +168,28 @@ Future uploadSaveGame(userDetails,saveGame) {
   return Firestore.instance.collection('users').document(userDetails.uid).updateData({
     'saveGame': saveGame,
   });
+}
+
+void borrow(String id,amountInBillions,userDetails,saveGame) {
+  Map debt = saveGame['debtData'];
+  String monthDue = (saveGame['month']+saveGame['treasuries'][id]['months']).toString();
+  int amount = amountInBillions*1000000000;
+  if(debt[monthDue] == null) {
+    debt[monthDue] = [];
+  }
+  print(monthDue);
+  List list = new List.from(debt[monthDue]);
+  list.add({
+    'id': id,
+    'amount': amount,
+    'rate': saveGame['treasuries'][id]['rate'],
+  });
+  debt[monthDue]= list;
+  saveGame['balance'] += amount;
+  saveGame['debt'] += amount+(amount*saveGame['treasuries'][id]['rate']).round();
+  saveGame['interestDue'] += (amount*saveGame['treasuries'][id]['rate']).round()/saveGame['treasuries'][id]['months'];
+  saveGame['treasuries'][id]['sold'] += amountInBillions;
+  saveGame['treasuries'][id]['rate'] = calculateRate(saveGame,id,amount);
 }
 
 void calculatePolicy(id,saveGame) {
