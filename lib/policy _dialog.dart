@@ -6,7 +6,7 @@ import 'dart:convert';
 import 'package:intl/intl.dart';
 
 class PolicyDialog extends StatelessWidget {
-  final Map<String,dynamic> saveGame;
+  final Map saveGame;
   final String type;
 
   PolicyDialog({
@@ -32,7 +32,7 @@ class PolicyDialog extends StatelessWidget {
 
   List<Widget> _buildPolicyCards(context) {
     List<Widget> cardList = <Widget>[];
-    Map<String,dynamic> policies = saveGame['policies'];
+    Map policies = saveGame['policies'];
     policies.forEach((id,data) {
       print(type);
       if(!data['enabled'] && data['type'] == type)
@@ -77,7 +77,7 @@ class PolicyDialog extends StatelessWidget {
 
 class PolicyEditDialog extends StatefulWidget {
   final String id;
-  final Map<String,dynamic> policyData;
+  final Map policyData;
   final bool edit;
 
   PolicyEditDialog({
@@ -93,8 +93,8 @@ class PolicyEditDialog extends StatefulWidget {
 class _PolicyEditDialogState extends State<PolicyEditDialog> {
   String id;
   bool edit;
-  Map<String,dynamic> policyData;
-  Map<String,dynamic> newPolicyData;
+  Map policyData;
+  Map newPolicyData;
 
   _PolicyEditDialogState({
     @required this.id,
@@ -176,7 +176,7 @@ class _PolicyEditDialogState extends State<PolicyEditDialog> {
   List<Widget> _buildSliderOptions() {
     NumberFormat numFormatCompact = new NumberFormat.compact();
     List<Widget> list = <Widget>[];
-    Map<dynamic,dynamic> sliderSettings = newPolicyData['sliderSettings'];
+    Map sliderSettings = newPolicyData['sliderSettings'];
     sliderSettings.forEach((id,setting) {
       list.add(
         new Card(
@@ -244,7 +244,7 @@ class _PolicyEditDialogState extends State<PolicyEditDialog> {
   }
 
   double _getYearlyAffect(id) {
-    List<dynamic> affect = newPolicyData['sliderSettings'][id]['multipliers'];
+    Map monthMultipliers = newPolicyData['sliderSettings'][id]['monthMultipliers'];
     double sum = 0.0;
     affect.forEach((num) {
       if(newPolicyData['sliderSettings'][id]['percent']) {
@@ -259,7 +259,7 @@ class _PolicyEditDialogState extends State<PolicyEditDialog> {
 
 class PolicyEditDialogResult {
   final String id;
-  final Map<String,dynamic> policyData;
+  final Map policyData;
   final bool delete;
 
   PolicyEditDialogResult(this.id,this.policyData,this.delete);

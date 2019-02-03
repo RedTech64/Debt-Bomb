@@ -99,7 +99,7 @@ class MainMenuPage extends StatelessWidget {
     debtDocs.forEach((DocumentSnapshot d) {
       debtList[d.documentID] = (d.data);
     });
-    Map<String,dynamic> refData = refDoc.data;
+    Map refData = refDoc.data;
     refData['policies'] = policyList;
     refData['treasuries'] = debtList;
     Firestore.instance.collection('users').document(userDetails.uid).updateData({

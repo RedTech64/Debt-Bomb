@@ -6,7 +6,7 @@ import 'sign_in.dart';
 
 class HomePage extends StatefulWidget {
   final UserDetails userDetails;
-  final Map<String,dynamic> saveGame;
+  final Map saveGame;
 
   HomePage({
     @required this.userDetails,
@@ -19,7 +19,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final UserDetails userDetails;
-  Map<String,dynamic> saveGame;
+  Map saveGame;
   Map<String,double> rates;
   int _debtSliderValue = 2;
   bool _debtBuy = false;
@@ -206,7 +206,7 @@ class _HomePageState extends State<HomePage> {
 
   List<Widget> _buildDebtCards() {
     List<Widget> list = <Widget>[];
-    Map<String,dynamic> treasuries = saveGame['treasuries'];
+    Map treasuries = saveGame['treasuries'];
     treasuries.forEach((id,data) {
       list.add(
         new TreasuryNote(

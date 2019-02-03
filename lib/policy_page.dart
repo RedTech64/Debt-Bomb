@@ -7,7 +7,7 @@ import 'package:intl/intl.dart';
 
 class PolicyPage extends StatefulWidget {
   final UserDetails userDetails;
-  final Map<String,dynamic> saveGame;
+  final Map saveGame;
   final String type;
 
   PolicyPage({
@@ -21,7 +21,7 @@ class PolicyPage extends StatefulWidget {
 
 class _PolicyPageState extends State<PolicyPage> {
   UserDetails userDetails;
-  Map<String,dynamic> saveGame;
+  Map saveGame;
   String type;
 
   _PolicyPageState({
@@ -41,7 +41,7 @@ class _PolicyPageState extends State<PolicyPage> {
 
   List<Widget> _buildPolicyCards() {
     List<Widget> list = <Widget>[];
-    Map<String,dynamic> policies = saveGame['policies'];
+    Map policies = saveGame['policies'];
     policies.forEach((id,data) {
       if(data['enabled'] && data['type'] == type) {
         list.add(

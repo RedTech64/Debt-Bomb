@@ -9,7 +9,7 @@ import 'dart:math';
 
 class MainGameView extends StatefulWidget {
   final UserDetails userDetails;
-  final Map<String,dynamic> saveGame;
+  final Map saveGame;
 
   MainGameView({
     @required this.userDetails,
@@ -22,7 +22,7 @@ class MainGameView extends StatefulWidget {
 
 class _MainGameViewState extends State<MainGameView> {
   final UserDetails userDetails;
-  Map<String,dynamic> saveGame;
+  Map saveGame;
   int _pageIndex = 1;
   Color _buttonColor = Colors.black;
   Widget _page;
@@ -147,11 +147,11 @@ Future uploadSaveGame(userDetails,saveGame) {
 }
 
 void calculatePolicy(id,saveGame) {
-  Map<String,dynamic> policies = saveGame['policies'];
+  Map policies = saveGame['policies'];
   policies.forEach((id,data) {
     List amount = [0,0,0,0,0,0,0,0,0,0,0,0];
     if(data['enabled']) {
-      Map<String,dynamic> settings = policies[id]['sliderSettings'];
+      Map settings = policies[id]['sliderSettings'];
       settings.forEach((id,data) {
         int setting = data['setting'];
         List multipliers = data['multipliers'];
@@ -173,13 +173,13 @@ void calculatePolicy(id,saveGame) {
 }
 
 double calculateRate(saveGame,id) {
-  Map<String,dynamic> treasury = saveGame['treasuries'][id];
+  Map treasury = saveGame['treasuries'][id];
   return 1/(1+treasury['shift']*pow(e,-.07*treasury['sold']));
 }
 
 double getRevenue(saveGame,month) {
   double sum = 0.0;
-  Map<String,dynamic> policies = saveGame['policies'];
+  Map policies = saveGame['policies'];
   policies.forEach((id,data) {
     if(data['type'] == "revenue" && data['enabled'] == true) {
       sum += data['income'][month%12];
@@ -190,7 +190,7 @@ double getRevenue(saveGame,month) {
 
 double getExpenditures(saveGame,month) {
   double sum = 0.0;
-  Map<String,dynamic> policies = saveGame['policies'];
+  Map policies = saveGame['policies'];
   policies.forEach((id,data) {
     if(data['type'] == "expenditure" && data['enabled'] == true) {
       sum += data['cost'][month%12];
