@@ -34,7 +34,6 @@ class PolicyDialog extends StatelessWidget {
     List<Widget> cardList = <Widget>[];
     Map policies = saveGame['policies'];
     policies.forEach((id,data) {
-      print(type);
       if(!data['enabled'] && data['type'] == type)
         cardList.add(
           new Card(
@@ -246,13 +245,17 @@ class _PolicyEditDialogState extends State<PolicyEditDialog> {
   double _getYearlyAffect(id) {
     Map monthMultipliers = newPolicyData['sliderSettings'][id]['monthMultipliers'];
     double sum = 0.0;
-    affect.forEach((num) {
-      if(newPolicyData['sliderSettings'][id]['percent']) {
-        sum += (num*(newPolicyData['sliderSettings'][id]['setting']/100));
-      } else {
-        sum += (num * (newPolicyData['sliderSettings'][id]['setting']));
-      }
+    num totalMult = 0;
+    monthMultipliers.forEach((month,num) {
+      totalMult += num*newPolicyData['sliderSettings'][id]['defaultMultiplier'];
     });
+    totalMult += (newPolicyData['sliderSettings'][id]['defaultMultiplier'])*(12-monthMultipliers.length);
+    print(totalMult);
+    if(newPolicyData['sliderSettings'][id]['percent']) {
+      sum += totalMult*(newPolicyData['sliderSettings'][id]['setting']/100)*newPolicyData['sliderSettings'][id]['sliderMultiplier'];
+    } else {
+      sum += totalMult*newPolicyData['sliderSettings'][id]['setting']*newPolicyData['sliderSettings'][id]['sliderMultiplier'];
+    }
     return sum;
   }
 }

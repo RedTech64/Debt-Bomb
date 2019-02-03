@@ -153,13 +153,21 @@ void calculatePolicy(id,saveGame) {
     if(data['enabled']) {
       Map settings = policies[id]['sliderSettings'];
       settings.forEach((id,data) {
-        int setting = data['setting'];
-        List multipliers = data['multipliers'];
-        for(int i = 0; i < multipliers.length; i++) {
-          if(data['percent']) {
-            amount[i] += multipliers[i]*(setting/100);
+        Map monthMultipliers = data['monthMultipliers'];
+        print(monthMultipliers);
+        for(int i = 1; i <= 12; i++) {
+          if(monthMultipliers[i.toString()] == null) {
+            if(data['percent']) {
+              amount[i-1] += (data['setting']/100)*data['defaultMultiplier']*data['sliderMultiplier'];
+            } else {
+              amount[i-1] += data['setting']*data['defaultMultiplier']*data['sliderMultiplier'];
+            }
           } else {
-            amount[i] += multipliers[i]*(setting);
+            if(data['percent']) {
+              amount[i-1] += (data['setting']/100)*data['defaultMultiplier']*monthMultipliers[i.toString()]*data['sliderMultiplier'];
+            } else {
+              amount[i-1] += data['setting']*data['defaultMultiplier']*monthMultipliers[i.toString()]*data['sliderMultiplier'];
+            }
           }
         }
       });
@@ -172,33 +180,49 @@ void calculatePolicy(id,saveGame) {
   });
 }
 
-double calculateRate(saveGame,id) {
+double calculateRate(saveGame,id,amount) {
   Map treasury = saveGame['treasuries'][id];
-  return 1/(1+treasury['shift']*pow(e,-.07*treasury['sold']));
+  if(treasury['sold'] > treasury['appetite'])
+    return treasury['rate'] += ((treasury['sold']/treasury['appetite'])/10000)*amount/1000000000;
+  else
+    return treasury['rate'].toDouble();
+  //return 1/(1+treasury['shift']*pow(e,-.01*treasury['sold']));
 }
 
 double getRevenue(saveGame,month) {
+  month = (month%12);
+  if(month == 0)
+    month = 12;
   double sum = 0.0;
   Map policies = saveGame['policies'];
   policies.forEach((id,data) {
     if(data['type'] == "revenue" && data['enabled'] == true) {
-      sum += data['income'][month%12];
+      if(data['income'] == null) {
+        calculatePolicy(id,saveGame);
+      }
+      sum += data['income'][month-1];
     }
   });
   return sum;
 }
 
-double getExpenditures(saveGame,month) {
+double getExpenditures(saveGame,time) {
+  int month = (time%12);
+  if(month == 0)
+    month = 12;
   double sum = 0.0;
   Map policies = saveGame['policies'];
   policies.forEach((id,data) {
     if(data['type'] == "expenditure" && data['enabled'] == true) {
-      sum += data['cost'][month%12];
+      if(data['cost'] == null) {
+        calculatePolicy(id,saveGame);
+      }
+      sum += data['cost'][month-1];
     }
   });
   sum += saveGame['interestDue'];
-  if(saveGame['debtData'][month.toString()] != null) {
-    List treasuries = saveGame['debtData'][month.toString()];
+  if(saveGame['debtData'][time.toString()] != null) {
+    List treasuries = saveGame['debtData'][time.toString()];
     treasuries.forEach((map) {
       sum += map['amount'];
     });
