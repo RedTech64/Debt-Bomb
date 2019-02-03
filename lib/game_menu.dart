@@ -42,7 +42,9 @@ class MainMenuPage extends StatelessWidget {
                   ),
                 ),
                 color: Colors.redAccent,
-                onPressed: () {},
+                onPressed: () {
+                  _loadGame(context);
+                },
               ),
             ),
             new SizedBox(
@@ -71,6 +73,13 @@ class MainMenuPage extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  Future _loadGame(context) async {
+    DocumentReference refSaveGame = Firestore.instance.collection('users').document(userDetails.uid);
+    DocumentSnapshot saveGameDoc = await refSaveGame.get();
+    Map saveGame = saveGameDoc.data['saveGame'];
+    Navigator.push(context, new MaterialPageRoute(builder: (context) => new MainGameView(userDetails: userDetails,saveGame: saveGame)));
   }
 
   Future _newGame(context) async {
