@@ -133,11 +133,18 @@ class _MainGameViewState extends State<MainGameView> {
     saveGame['month'] += 1;
     Map treasuries = saveGame['treasuries'];
     treasuries.forEach((id,data) {
-      if(data['sold'] < data['appetite'] && data['rate'] > 0)
-        saveGame['treasuries'][id]['rate'] -= ((data['appetite']/(data['sold']+data['monthlyAppetite']))*pow((data['rate']),2))/100;
+      if(data['appetite'] >= 0 && data['rate'] > 0)
+        if(data['rate'] > 1)
+          saveGame['treasuries'][id]['rate'] = data['rate']/2;
+        else
+          saveGame['treasuries'][id]['rate'] -= ((data['appetite']+data['monthlyAppetite']/data['monthlyAppetite'])*pow((data['rate']),2))/100;
       if(data['rate'] < 0)
-        saveGame['treasuries'][id]['rate'] = 0.0;
-      saveGame['treasuries'][id]['appetite'] += data['monthlyAppetite'];
+        treasuries[id]['rate'] = 0.0;
+      if(data['rate'] >= 1)
+        treasuries[id]['monthlyAppetite'] = data['baseAppetite'] + (data['rate']*100)/5;
+      else
+        treasuries[id]['monthlyAppetite'] = data['baseAppetite'] + (data['rate']*100)*pow(100-(data['rate']*100), 0.5)/5;
+      treasuries[id]['appetite'] = data['monthlyAppetite'];
       if(data['autoSell'] > 0)
         borrow(id,data['autoSell'],userDetails,saveGame);
     });
@@ -147,7 +154,7 @@ class _MainGameViewState extends State<MainGameView> {
     setState(() {
       _page = new HomePage(userDetails: userDetails, saveGame: saveGame);
     });
-    uploadSaveGame(userDetails, saveGame);
+    //uploadSaveGame(userDetails, saveGame);
   }
 
   Future _openPolicyDialog(context,type) async {
@@ -177,7 +184,6 @@ void borrow(String id,amountInBillions,userDetails,saveGame) {
   if(debt[monthDue] == null) {
     debt[monthDue] = [];
   }
-  print(monthDue);
   List list = new List.from(debt[monthDue]);
   list.add({
     'id': id,
@@ -189,6 +195,7 @@ void borrow(String id,amountInBillions,userDetails,saveGame) {
   saveGame['debt'] += amount+(amount*saveGame['treasuries'][id]['rate']).round();
   saveGame['interestDue'] += (amount*saveGame['treasuries'][id]['rate']).round()/saveGame['treasuries'][id]['months'];
   saveGame['treasuries'][id]['sold'] += amountInBillions;
+  saveGame['treasuries'][id]['appetite'] -= amountInBillions;
   saveGame['treasuries'][id]['rate'] = calculateRate(saveGame,id,amount);
 }
 
@@ -228,11 +235,10 @@ void calculatePolicy(id,saveGame) {
 
 double calculateRate(saveGame,id,amount) {
   Map treasury = saveGame['treasuries'][id];
-  if(treasury['sold'] > treasury['appetite'])
-    return treasury['rate'] += ((treasury['sold']/treasury['appetite'])/10000)*amount/1000000000;
+  if(treasury['appetite'] >= 0)
+    return treasury['rate'];
   else
-    return treasury['rate'].toDouble();
-  //return 1/(1+treasury['shift']*pow(e,-.01*treasury['sold']));
+    return treasury['rate'] += (((treasury['appetite']*-1)+treasury['monthlyAppetite']/treasury['monthlyAppetite'])/10000)*amount/100000000000;
 }
 
 double getRevenue(saveGame,month) {
