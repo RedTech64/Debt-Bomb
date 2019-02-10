@@ -157,9 +157,10 @@ class _HomePageState extends State<HomePage> {
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                         children: <Widget>[
                           new SizedBox(
-                            width: 70.0,
+                            width: 80.0,
                             child: new Text(
                               "Maturity",
+                              textAlign: TextAlign.center,
                               style: new TextStyle(
                                 fontSize: 16.0,
                                 fontWeight: FontWeight.bold,
@@ -170,6 +171,7 @@ class _HomePageState extends State<HomePage> {
                             width: 45.0,
                             child: new Text(
                               "Rate",
+                              textAlign: TextAlign.center,
                               style: new TextStyle(
                                 fontSize: 16.0,
                                 fontWeight: FontWeight.bold,
@@ -177,7 +179,7 @@ class _HomePageState extends State<HomePage> {
                             ),
                           ),
                           new SizedBox(
-                            width: 70.0,
+                            width: 80.0,
                             child: new Text(
                               "Auto Sell",
                               textAlign: TextAlign.right,
@@ -187,13 +189,27 @@ class _HomePageState extends State<HomePage> {
                               ),
                             ),
                           ),
-                          new Switch(
-                            value: _debtBuy,
-                            onChanged: (value) {
-                              setState(() {
-                                _debtBuy = value;
-                              });
-                            }
+                          new SizedBox(
+                            width: 80.0,
+                            child: new Text(
+                              "Resell",
+                              textAlign: TextAlign.center,
+                              style: new TextStyle(
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                          new SizedBox(
+                            width: 80.0,
+                            child: new Text(
+                              "Sell",
+                              textAlign: TextAlign.center,
+                              style: new TextStyle(
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
                           ),
                         ],
                       ),
@@ -258,6 +274,7 @@ class _HomePageState extends State<HomePage> {
           rate: data['rate'].toDouble(),
           autoSell: data['autoSell'],
           buy: _debtBuy,
+          resell: data['resell'],
           onTap: () {
             borrow(id,_debtSliderValue,userDetails,saveGame);
             //uploadSaveGame(userDetails,saveGame);
@@ -273,9 +290,11 @@ class _HomePageState extends State<HomePage> {
                 );
               }
             );
-            setState(() {
-
-            });
+            setState(() {});
+          },
+          toggleResell: (value) {
+            treasuries[id]['resell'] = value;
+            setState(() {});
           },
         )
       );
@@ -290,8 +309,10 @@ class TreasuryNote extends StatelessWidget {
   final double rate;
   final int autoSell;
   final bool buy;
+  final bool resell;
   final VoidCallback onTap;
   final VoidCallback onEditAuto;
+  final ValueChanged toggleResell;
 
   TreasuryNote({
     @required this.name,
@@ -299,8 +320,10 @@ class TreasuryNote extends StatelessWidget {
     @required this.rate,
     @required this.autoSell,
     @required this.buy,
+    @required this.resell,
     @required this.onTap,
-    @required this.onEditAuto
+    @required this.onEditAuto,
+    @required this.toggleResell,
   });
 
   @override
@@ -343,6 +366,10 @@ class TreasuryNote extends StatelessWidget {
           ),
           onTap: onEditAuto,
         ),
+        new Checkbox(
+          value: resell,
+          onChanged: toggleResell,
+        ),
         buy ?
         new IconButton(icon: new Icon(Icons.cancel), onPressed: onTap) :
         new IconButton(icon: new Icon(Icons.add_circle), onPressed: onTap),
@@ -373,9 +400,9 @@ class _AutoSellDialogContextState extends State<AutoSellDialogContext> {
       children: <Widget>[
         new Slider(
           value: data['autoSell'].toDouble(),
-          divisions: 40,
+          divisions: 50,
           min: 0.0,
-          max: 200.0,
+          max: 50.0,
           onChanged: (value) {
             setState(() {
               data['autoSell'] = value.round();
