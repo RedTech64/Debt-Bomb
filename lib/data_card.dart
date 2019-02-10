@@ -3,25 +3,19 @@ import 'package:intl/intl.dart';
 
 class DataCard extends StatelessWidget {
   String label;
-  final double number;
+  final String value;
   TextStyle style;
   Color color;
-  bool compact;
 
   DataCard({
     this.label,
-    @required this.number,
+    @required this.value,
     this.style,
     this.color,
-    this.compact
   });
 
   @override
   Widget build(BuildContext context) {
-    NumberFormat numFormat = new NumberFormat();
-    NumberFormat numFormatCompact = new NumberFormat.compact();
-    if(compact == null)
-      compact = false;
     return new Card(
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(18.0),
@@ -44,9 +38,7 @@ class DataCard extends StatelessWidget {
               new Padding(
                 padding: const EdgeInsets.all(8.0),
                 child: new Text(
-                  compact ?
-                  "\$"+numFormatCompact.format(number) :
-                  "\$"+numFormat.format(number),
+                  value,
                   style: style
                 ),
               )

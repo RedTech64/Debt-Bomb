@@ -119,7 +119,7 @@ class _MainGameViewState extends State<MainGameView> {
   void _nextTurn() {
     saveGame['month'] += 1;
     saveGame['balance'] += getRevenue(saveGame, saveGame['month']);
-    saveGame['balance'] -= getExpenditures(saveGame, saveGame['month']);
+    saveGame['balance'] -= getExpenditures(saveGame, saveGame['month'])+getDebtDue(saveGame, saveGame['month']);
     saveGame['debt'] -= saveGame['interestDue'];
     if(saveGame['debtData'][(saveGame['month']).toString()] != null) {
       List debtData = saveGame['debtData'][(saveGame['month']).toString()];
@@ -130,7 +130,7 @@ class _MainGameViewState extends State<MainGameView> {
         if(saveGame['treasuries'][map['id']]['resell'])
           saveGame['treasuries'][map['id']]['resellAmount'] += map['amount']/1000000000;
       });
-      saveGame['debtData'][(saveGame['month']).toString()] = null;
+      saveGame['debtData'].remove((saveGame['month']).toString());
     }
     Map treasuries = saveGame['treasuries'];
     treasuries.forEach((id,data) {
@@ -275,6 +275,11 @@ double getExpenditures(saveGame,time) {
     }
   });
   sum += saveGame['interestDue'];
+  return sum;
+}
+
+double getDebtDue(saveGame,time) {
+  double sum = 0.0;
   if(saveGame['debtData'][time.toString()] != null) {
     List treasuries = saveGame['debtData'][time.toString()];
     treasuries.forEach((map) {

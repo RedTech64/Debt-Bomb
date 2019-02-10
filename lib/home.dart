@@ -31,6 +31,8 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
+    NumberFormat numFormat = new NumberFormat();
+    NumberFormat numFormatCompact = new NumberFormat.compact();
     return new SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.all(8.0),
@@ -53,7 +55,13 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   new DataCard(
-                    number: saveGame['balance'].round().toDouble(),
+                    value: "\$"+numFormat.format(saveGame['balance'].round()),
+                    style: new TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  new DataCard(
+                    value: numFormat.format((saveGame['debt']/saveGame['gdp'])*100.round())+"%",
                     style: new TextStyle(
                       fontWeight: FontWeight.bold,
                     ),
@@ -62,7 +70,7 @@ class _HomePageState extends State<HomePage> {
               ),
               new DataCard(
                 label: "National Debt",
-                number: saveGame['debt'].round().toDouble(),
+                value: "\$"+numFormat.format(saveGame['debt'].round()).toString(),
                 style: new TextStyle(
                   color: Colors.red,
                   fontSize: 28.0,
@@ -73,37 +81,38 @@ class _HomePageState extends State<HomePage> {
                 children: <Widget>[
                   new Expanded(
                     child: new DataCard(
-                      label: "Revenue",
-                      number: getRevenue(saveGame,saveGame['month']+1).toDouble(),
+                      label: "Approval",
+                      value: (saveGame['approvalRating']*100).toString()+"%",
                       style: new TextStyle(
-                        color: Colors.green,
                         fontSize: 16.0,
                         fontWeight: FontWeight.bold,
                       ),
-                      compact: true,
+                    ),
+                  ),
+                  new Expanded(
+                    child: Column(
+                      children: <Widget>[
+                        new DataCard(
+                          label: "Cash Flow",
+                          value: numFormatCompact.format((getRevenue(saveGame,saveGame['month']+1)-getExpenditures(saveGame,saveGame['month']+1)-getDebtDue(saveGame,saveGame['month']+1))),
+                          style: new TextStyle(
+                            color: (getRevenue(saveGame,saveGame['month']+1)-getExpenditures(saveGame,saveGame['month']+1)-getDebtDue(saveGame,saveGame['month']+1) < 0) ? Colors.red : Colors.green,
+                            fontSize: 24.0,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   new Expanded(
                     child: new DataCard(
-                      number: getRevenue(saveGame,saveGame['month']+1).toDouble()-getExpenditures(saveGame,saveGame['month']+1).toDouble(),
-                      style: new TextStyle(
-                        color: (getRevenue(saveGame,saveGame['month']+1)-getExpenditures(saveGame,saveGame['month']+1) < 0) ? Colors.red : Colors.green,
-                        fontSize: 24.0,
-                        fontWeight: FontWeight.bold,
-                      ),
-                      compact: true,
-                    ),
-                  ),
-                  new Expanded(
-                    child: new DataCard(
-                      label: "Expenditures",
-                      number: getExpenditures(saveGame,saveGame['month']+1).toDouble(),
+                      label: "UEP Rate",
+                      value: (saveGame['unemploymentRate']*100).toString()+"%",
                       style: new TextStyle(
                         color: Colors.red,
                         fontSize: 16.0,
                         fontWeight: FontWeight.bold,
                       ),
-                      compact: true,
                     ),
                   ),
                 ],
