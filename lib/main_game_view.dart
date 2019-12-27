@@ -138,13 +138,13 @@ class _MainGameViewState extends State<MainGameView> {
         if(data['rate'] > 1)
           saveGame['treasuries'][id]['rate'] = data['rate']/2;
         else
-          saveGame['treasuries'][id]['rate'] -= ((data['appetite']+data['monthlyAppetite']/data['monthlyAppetite'])*pow((data['rate']),2))/100;
+          saveGame['treasuries'][id]['rate'] -= (((data['appetite']+data['monthlyAppetite'])/data['monthlyAppetite'])*pow((data['rate']),2))/10;
       if(data['rate'] < 0)
         treasuries[id]['rate'] = 0.0;
       if(data['rate'] >= 1)
         treasuries[id]['monthlyAppetite'] = data['baseAppetite'] + (data['rate']*100)/5;
       else
-        treasuries[id]['monthlyAppetite'] = data['baseAppetite'] + (data['rate']*100)*pow(100-(data['rate']*100), 0.5)*(10-(saveGame['debt']/saveGame['gdp']))/8;
+        treasuries[id]['monthlyAppetite'] = data['baseAppetite'] + (data['rate']*100)*pow(100-(data['rate']*100), 0.5)*(saveGame['gdp']/1000000000000)/(2*data['months']);
       treasuries[id]['appetite'] = data['monthlyAppetite'];
       if(data['autoSell'] > 0 || data['resellAmount'] > 0)
         borrow(id,data['autoSell']+data['resellAmount'],userDetails,saveGame);
@@ -237,10 +237,11 @@ void calculatePolicy(id,saveGame) {
 
 double calculateRate(saveGame,id,amount) {
   Map treasury = saveGame['treasuries'][id];
+  print(id+" "+(((treasury['appetite']*-1)+treasury['monthlyAppetite'])/treasury['monthlyAppetite']).toString());
   if(treasury['appetite'] >= 0)
     return treasury['rate'];
   else
-    return treasury['rate'] += (((treasury['appetite']*-1)+treasury['monthlyAppetite']/treasury['monthlyAppetite'])/10000)*amount/1000000000000;
+    return treasury['rate'] += (((treasury['appetite']*-1)+treasury['monthlyAppetite'])/treasury['monthlyAppetite'])*amount*treasury['months']/1000000000000000;
 }
 
 double getRevenue(saveGame,month) {

@@ -93,7 +93,7 @@ class MainMenuPage extends StatelessWidget {
       policyList[d.documentID] = (d.data);
     });
     collRef = refDataRef.collection('debt');
-    collDocs = await collRef.getDocuments();
+    collDocs = await collRef.orderBy('months').getDocuments();
     List<DocumentSnapshot> debtDocs = collDocs.documents;
     Map<String,Map<String,dynamic>> debtList = new Map();
     debtDocs.forEach((DocumentSnapshot d) {

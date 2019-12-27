@@ -15,14 +15,17 @@ class _SignInPageState extends State<SignInPage> {
   final GoogleSignIn _gSignIn = new GoogleSignIn();
 
   Future<FirebaseUser> _signIn() async {
-    GoogleSignInAccount googleSignInAccount = await _gSignIn.signIn();
+    GoogleSignInAccount googleSignInAccount = await _gSignIn.signInSilently();
+    print('SIGN IN ATTEMPT 1');
+    if(googleSignInAccount.id == null)
+      googleSignInAccount = await _gSignIn.signIn();
     GoogleSignInAuthentication authentication =
     await googleSignInAccount.authentication;
-
+    print('SIGN IN ATTEMPT 2');
     FirebaseUser user = await _fAuth.signInWithGoogle(
       idToken: authentication.idToken,
       accessToken: authentication.accessToken);
-
+    print('SIGN IN ATTEMPT 3');
     UserDetails details = new UserDetails(
       user.providerId,
       user.uid,
@@ -30,6 +33,7 @@ class _SignInPageState extends State<SignInPage> {
       user.email
     );
     DocumentSnapshot userDoc = await Firestore.instance.collection('users').document(details.uid).get();
+    print('SIGN IN ATTEMPT 4');
     if(userDoc.exists)
       await Firestore.instance.collection('users').document(details.uid).updateData({
         'name': details.displayName,

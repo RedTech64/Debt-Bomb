@@ -61,7 +61,13 @@ class _HomePageState extends State<HomePage> {
                     ),
                   ),
                   new DataCard(
-                    value: numFormat.format((saveGame['debt']/saveGame['gdp'])*100.round())+"%",
+                    value: ((saveGame['debt']/saveGame['gdp'])*100).round().toString()+"%",
+                    style: new TextStyle(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  new DataCard(
+                    value: "\$"+numFormatCompact.format(saveGame['balance']+getRevenue(saveGame, saveGame['month']+1)-getExpenditures(saveGame, saveGame['month']+1)-getDebtDue(saveGame, saveGame['month']+1)),
                     style: new TextStyle(
                       fontWeight: FontWeight.bold,
                     ),

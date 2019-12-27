@@ -84,7 +84,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
                       label: "Debt Due",
                       value: numFormatCompact.format(getDebtDue(saveGame,saveGame['month']+1).toDouble()),
                       style: new TextStyle(
-                        color: (getRevenue(saveGame,saveGame['month']+1)-getExpenditures(saveGame,saveGame['month']+1) < 0) ? Colors.red : Colors.green,
+                        color: Colors.red,
                         fontSize: 24.0,
                         fontWeight: FontWeight.bold,
                       ),
@@ -154,14 +154,27 @@ class _StatisticsPageState extends State<StatisticsPage> {
                   fit: BoxFit.fill,
                   child: new DataTable(
                     columns: <DataColumn>[
-                      new DataColumn(label: new Text("Policy"),),
+                      new DataColumn(label: new Text("Policy")),
                       new DataColumn(label: new Text("Income")),
                       new DataColumn(label: new Text("Cost")),
                     ],
-                    rows: _buildRows(),
+                    rows: _buildPolicyRows(),
                   ),
                 ),
-              )
+              ),
+              new Card(
+                child: new FittedBox(
+                  fit: BoxFit.fill,
+                  child: new DataTable(
+                    columns: <DataColumn>[
+                      new DataColumn(label: new Text("Maturity")),
+                      new DataColumn(label: new Text("Amount")),
+                      new DataColumn(label: new Text("Percent")),
+                    ],
+                    rows: _buildDebtRows(),
+                  ),
+                ),
+              ),
             ],
           ),
         )
@@ -185,7 +198,7 @@ class _StatisticsPageState extends State<StatisticsPage> {
     return total;
   }
 
-  List<DataRow> _buildRows() {
+  List<DataRow> _buildPolicyRows() {
     NumberFormat numFormatCompact = new NumberFormat.compact();
     List<DataRow> list = [];
     int time = _getTimeFrame();
@@ -227,12 +240,17 @@ class _StatisticsPageState extends State<StatisticsPage> {
         });
       }
     });
+    num interest = 0;
+    if(time == -1)
+      interest = saveGame['interestDue']*12;
+    else
+      interest = saveGame['interestDue'];
     list.add(
         new DataRow(
           cells: [
             new DataCell(new Text("Interest Payment")),
             new DataCell(new Text("")),
-            new DataCell(new Text("\$"+numFormatCompact.format(saveGame['interestDue']))),
+            new DataCell(new Text("\$"+numFormatCompact.format(interest))),
           ],
         )
     );
@@ -241,11 +259,35 @@ class _StatisticsPageState extends State<StatisticsPage> {
         cells: [
           new DataCell(new Text("Totals")),
           new DataCell(new Text(numFormatCompact.format(incomeTotal))),
-          new DataCell(new Text(numFormatCompact.format(costTotal+saveGame['interestDue']))),
+          new DataCell(new Text(numFormatCompact.format(costTotal+interest))),
         ],
       )
     );
     return list;
+  }
+
+  List<DataRow> _buildDebtRows() {
+    NumberFormat numFormatCompact = new NumberFormat();
+    NumberFormat numFormat = new NumberFormat("#0.00","en-us");
+    List<DataRow> rows = [];
+    Map treasuryData = saveGame['treasuries'];
+    num sum = 0;
+    treasuryData.forEach((id,data) {
+        sum += data['sold'];
+      }
+    );
+    treasuryData.forEach((id,data) {
+      rows.add(
+        new DataRow(
+          cells: [
+            new DataCell(new Text(data['name'])),
+            new DataCell(new Text(numFormatCompact.format(data['sold'])+"B")),
+            new DataCell(new Text(numFormat.format(data['sold']*100/sum).toString()+"%")),
+          ]
+        )
+      );
+    });
+    return rows;
   }
 
   num _getMonthAmount(month,data) {
